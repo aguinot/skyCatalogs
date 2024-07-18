@@ -18,6 +18,14 @@ def _add_roman_fluxes(fields):
     return fields
 
 
+def _add_euclid_fluxes(fields):
+    fields += [pa.field('euclid_flux_VIS', pa.float32(), True),
+               pa.field('euclid_flux_NISP_Y', pa.float32(), True),
+               pa.field('euclid_flux_NISP_J', pa.float32(), True),
+               pa.field('euclid_flux_NISP_H', pa.float32(), True)]
+    return fields
+
+
 # This schema is not the same as the one taken from the data,
 # probably because of the indexing in the schema derived from a pandas df.
 def make_galaxy_schema(logname, sed_subdir=False, knots=True,
@@ -108,8 +116,8 @@ def make_galaxy_schema(logname, sed_subdir=False, knots=True,
 
 
 def make_galaxy_flux_schema(logname, galaxy_type='cosmodc2',
-                            include_roman_flux=False, metadata_input=None,
-                            metadata_key='provenance'):
+                            include_roman_flux=False, include_euclid_flux=False,
+                            metadata_input=None, metadata_key='provenance'):
     '''
     Will make a separate parquet file with lsst flux for each band
     and galaxy id for joining with the main galaxy file
@@ -126,6 +134,8 @@ def make_galaxy_flux_schema(logname, galaxy_type='cosmodc2',
               pa.field('lsst_flux_y', pa.float32(), True)]
     if include_roman_flux:
         fields = _add_roman_fluxes(fields)
+    if include_euclid_flux:
+        fields = _add_euclid_fluxes(fields)
     if metadata_input:
         metadata_bytes = json.dumps(metadata_input).encode('utf8')
         final_metadata = {metadata_key: metadata_bytes}
@@ -136,6 +146,7 @@ def make_galaxy_flux_schema(logname, galaxy_type='cosmodc2',
 
 
 def make_star_flux_schema(logname, include_roman_flux=False,
+                          include_euclid_flux=False,
                           metadata_input=None, metadata_key='provenance'):
     '''
     Will make a separate parquet file with lsst flux for each band
@@ -152,6 +163,8 @@ def make_star_flux_schema(logname, include_roman_flux=False,
               pa.field('lsst_flux_y', pa.float32(), True)]
     if include_roman_flux:
         fields = _add_roman_fluxes(fields)
+    if include_euclid_flux:
+        fields = _add_euclid_fluxes(fields)
     if metadata_input:
         metadata_bytes = json.dumps(metadata_input).encode('utf8')
         final_metadata = {metadata_key: metadata_bytes}

@@ -16,6 +16,10 @@ _map_SNANA_bands = {'R062': 'R',
                     'K213': 'K',
                     'W146': 'W'}
 
+_euclid_map_SNANA_bands = {'NISP_Y': 'Y',
+                           'NISP_J': 'J',
+                           'NISP_H': 'H'}
+
 class SnanaObject(BaseObject):
     _type_name = 'snana'
 
@@ -118,6 +122,17 @@ class SnanaObject(BaseObject):
         flux = super().get_roman_flux(band, sed=sed, cache=cache, mjd=mjd)
         return self._apply_flux_correction(flux,
                                            f'magcor_{_map_SNANA_bands[band]}',
+                                           mjd)
+
+    def get_euclid_flux(self, band, sed=None, cache=False, mjd=None):
+        # There is usually no reason to cache flux for SNe, in fact it could
+        # cause problems. If flux has been cached and then this routine
+        # is called again with a different value of mjd, it would
+        # return the wrong answer.
+
+        flux = super().get_euclid_flux(band, sed=sed, cache=cache, mjd=mjd)
+        return self._apply_flux_correction(flux,
+                                           f'magcor_{_euclid_map_SNANA_bands[band]}',
                                            mjd)
 
     def _find_mjd_interval(self, mjd=None):

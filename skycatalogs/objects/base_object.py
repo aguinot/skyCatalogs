@@ -8,6 +8,10 @@ from galsim.roman import longwave_bands as roman_longwave_bands
 from galsim.roman import shortwave_bands as roman_shortwave_bands
 from galsim.roman import getBandpasses as roman_getBandpasses
 
+from euclidlike.instrument_params import vis_bands as euclid_optical_bands
+from euclidlike.instrument_params import nisp_bands as euclid_nir_bands
+from euclidlike import getBandpasses as euclid_getBandpasses
+
 from skycatalogs.utils.translate_utils import form_object_string
 from skycatalogs.utils.config_utils import Config
 
@@ -18,11 +22,12 @@ form of their associated SEDs
 '''
 
 __all__ = ['BaseObject', 'ObjectCollection', 'ObjectList',
-           'LSST_BANDS', 'ROMAN_BANDS',
+           'LSST_BANDS', 'ROMAN_BANDS', 'EUCLID_BANDS',
            'load_lsst_bandpasses', 'load_roman_bandpasses']
 
 LSST_BANDS = ('ugrizy')
 ROMAN_BANDS = roman_shortwave_bands+roman_longwave_bands
+EUCLID_BANDS = euclid_optical_bands+euclid_nir_bands
 
 # global for easy access for code run within mp
 
@@ -81,6 +86,16 @@ def load_roman_bandpasses():
     global roman_bandpasses
     roman_bandpasses = roman_getBandpasses()
     return roman_bandpasses
+
+
+def load_euclid_bandpasses():
+    '''
+    Read in Euclid bandpasses from standard place, trim, and store in global dict
+    Returns: The dict
+    '''
+    global euclid_bandpasses
+    euclid_bandpasses = euclid_getBandpasses()
+    return euclid_bandpasses
 
 
 class BaseObject(object):
@@ -384,6 +399,45 @@ class BaseObject(object):
         else:
             for band in ROMAN_BANDS:
                 fluxes[band] = self.get_roman_flux(band, sed=sed,
+                                                   cache=cache, mjd=mjd)
+        if as_dict:
+            return fluxes
+        else:
+            return list(fluxes.values())
+
+    def get_euclid_flux(self, band, sed=None, cache=True, mjd=None):
+        if band not in EUCLID_BANDS:
+            return None
+        att = f'euclid_flux_{band}'
+
+        # Check if it's already an attribute
+        val = getattr(self, att, None)
+        if val is not None:
+            return val
+
+        if att in self.native_columns:
+            return self.get_native_attribute(att)
+
+        val = self.get_flux(euclid_bandpasses[band], sed=sed, mjd=mjd)
+
+        if cache:
+            setattr(self, att, val)
+        return val
+
+    def get_euclid_fluxes(self, cache=True, as_dict=True, mjd=None):
+        '''
+        Return a dict of fluxes for Euclid bandpasses or, if as_dict is False,
+        just a list in the same order as EUCLID_BANDS
+        '''
+        fluxes = dict()
+        sed = self.get_total_observer_sed(mjd=mjd)
+
+        if sed is None:
+            for band in EUCLID_BANDS:
+                fluxes[band] = 0.0
+        else:
+            for band in EUCLID_BANDS:
+                fluxes[band] = self.get_euclid_flux(band, sed=sed,
                                                    cache=cache, mjd=mjd)
         if as_dict:
             return fluxes
