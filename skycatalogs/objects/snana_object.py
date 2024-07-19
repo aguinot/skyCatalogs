@@ -16,7 +16,8 @@ _map_SNANA_bands = {'R062': 'R',
                     'K213': 'K',
                     'W146': 'W'}
 
-_euclid_map_SNANA_bands = {'NISP_Y': 'Y',
+_euclid_map_SNANA_bands = {'VIS': '',
+                           'NISP_Y': 'Y',
                            'NISP_J': 'J',
                            'NISP_H': 'H'}
 
